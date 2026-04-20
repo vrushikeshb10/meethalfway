@@ -21,7 +21,7 @@ export default function Home() {
   const [venues, setVenues] = useState([])
   const [errorType, setErrorType] = useState(null)
 
-  const canSubmit = form.locationA.trim() && form.locationB.trim() && form.vibe
+  const canSubmit = form.locationA.trim() && form.locationB.trim() && form.vibe && form.travelMode
 
   async function handleSubmit(e) {
     e.preventDefault()
