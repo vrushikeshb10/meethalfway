@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MeetHalfway
 
-## Getting Started
+**Stop arguing about where to meet. Let AI figure out what's fair.**
 
-First, run the development server:
+[**Live Demo →**](https://meethalfway-3v7f4va5u-vrushikeshb10s-projects.vercel.app)
+
+---
+
+## The Problem
+
+"Let's meet somewhere in the middle" sounds simple. It isn't.
+
+Geographic midpoints ignore how cities actually work — a point equidistant on a map can mean a 10-minute drive for one person and a 45-minute commute for the other. Most people default to suggesting venues near *themselves*, which creates friction and quiet resentment. The person who always travels further just stops making plans.
+
+## Who It's For
+
+- Friends split across a city who want to grab coffee without the back-and-forth
+- Colleagues planning a team lunch when everyone's commuting from different neighborhoods
+- Long-distance couples or family members meeting halfway between cities
+- Anyone tired of the "you pick" / "no you pick" loop
+
+## How It Works
+
+**1. Enter two locations**
+Type any address, neighborhood, or landmark. No coordinates, no fuss.
+
+**2. Choose your vibe and travel mode**
+Romantic dinner, casual hangout, or something adventurous — by transit, driving, or on foot.
+
+**3. Get 3 fair suggestions**
+MeetHalfway finds the point where both people's commute times are genuinely balanced, searches for real nearby venues, and shows you exact travel times for each person to each spot.
+
+---
+
+## Product Decisions Worth Explaining
+
+### Why "fair commute time" instead of geographic midpoint
+
+The obvious approach — split the lat/lng coordinates — produces a map pin, not a fair meeting. A geographic midpoint in a city with asymmetric transit coverage (think: one person near a metro line, one person not) can still be deeply unfair. MeetHalfway runs an iterative algorithm: it computes the geographic midpoint, checks actual transit times from both people, then nudges the search area toward the person with the longer commute until the difference is minimized. The goal is felt fairness, not mathematical symmetry.
+
+### Why three options instead of one "best" pick
+
+One recommendation feels like a black box. Three lets users apply context the app can't know — one person is vegetarian, one venue is too loud for a first date, one neighborhood feels sketchy at night. Three also creates a natural conversation: "I like option 2 or 3, you?" That's a better user outcome than a single autocratic suggestion.
+
+### Why vibe selection drives the search
+
+Search terms like "restaurant" return everything from street stalls to Michelin stars. Leading with vibe (romantic / casual / adventurous) narrows the keyword space before a single API call is made. It also shifts the user's mental model from *logistics* ("where is equidistant?") to *experience* ("what kind of evening do we want?"), which is the question that actually matters.
+
+### Why Claude orchestrates instead of hardcoded logic
+
+The midpoint algorithm involves geocoding, travel time calculation, candidate adjustment, and venue search — and the right sequence depends on intermediate results. A hardcoded pipeline would need branching logic for every edge case (no transit routes, zero venues in radius, one location outside city limits). Delegating orchestration to Claude with Google Maps as tools means the system adapts: if a keyword returns no venues, Claude tries a broader term; if transit returns no route, Claude falls back to driving. This flexibility would require significant defensive code to replicate statically.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 (App Router), Tailwind CSS v4, Framer Motion |
+| AI Orchestration | Claude API (Sonnet) with tool-use agent loop |
+| Location & Venues | Google Maps API (Geocoding, Places, Distance Matrix) |
+| Deployment | Vercel |
+
+---
+
+## Running Locally
 
 ```bash
+git clone <repo>
+cd meethalfway
+npm install
+cp .env.local.example .env.local
+# Add your ANTHROPIC_API_KEY and GOOGLE_MAPS_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Required Google Maps APIs: Geocoding API, Places API, Distance Matrix API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## What's Next
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Saved sessions** — share a link so both people can see the same suggestions
+- **Calendar integration** — propose a time alongside a place
+- **Group mode** — balance commutes across 3+ people
