@@ -26,8 +26,8 @@ const TOOLS = [
       properties: {
         lat: { type: 'number' },
         lng: { type: 'number' },
-        keyword: { type: 'string', description: 'e.g. "wine bar", "escape room", "rooftop restaurant"' },
-        radius_meters: { type: 'number', description: 'Search radius in meters, default 1500' }
+        keyword: { type: 'string', description: 'e.g. "restaurant", "escape room", "rooftop restaurant". Use broad terms — avoid niche Western terms like "wine bar" or "brewery".' },
+        radius_meters: { type: 'number', description: 'Search radius in meters. Use 3000–5000 for Indian cities. Default 3000.' }
       },
       required: ['lat', 'lng', 'keyword']
     }
@@ -49,12 +49,23 @@ const TOOLS = [
 
 async function executeTool(name, input) {
   switch (name) {
-    case 'geocode_location':
-      return await geocodeLocation(input.address)
-    case 'search_places_near':
-      return await searchPlacesNear(input.lat, input.lng, input.keyword, input.radius_meters || 1500)
-    case 'get_travel_time':
-      return await getTravelTime(input.origin_address, input.destination_address, input.mode)
+    case 'geocode_location': {
+      const result = await geocodeLocation(input.address)
+      console.log(`[geocode] "${input.address}" →`, result)
+      return result
+    }
+    case 'search_places_near': {
+      const radius = input.radius_meters || 3000
+      console.log(`[search] keyword="${input.keyword}" lat=${input.lat} lng=${input.lng} radius=${radius}m`)
+      const result = await searchPlacesNear(input.lat, input.lng, input.keyword, radius)
+      console.log(`[search] found ${result.length} results:`, result.map(r => r.name))
+      return result
+    }
+    case 'get_travel_time': {
+      const result = await getTravelTime(input.origin_address, input.destination_address, input.mode)
+      console.log(`[travel] "${input.origin_address}" → "${input.destination_address}" (${input.mode}): ${result}`)
+      return result
+    }
     default:
       throw new Error(`Unknown tool: ${name}`)
   }
@@ -87,6 +98,7 @@ async function runAgentLoop(locationA, locationB, vibe, travelMode) {
             const result = await executeTool(block.name, block.input)
             content = JSON.stringify(result)
           } catch (err) {
+            console.error(`[tool-error] ${block.name}:`, err.message)
             content = JSON.stringify({ error: err.message })
           }
           return { type: 'tool_result', tool_use_id: block.id, content }
