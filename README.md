@@ -78,6 +78,13 @@ Required Google Maps APIs: Geocoding API, Places API, Distance Matrix API.
 
 ---
 
+## Known Limitations
+
+- **Travel times reflect current conditions, not meetup time.** A search at 9pm returns evening traffic data regardless of when the meetup is actually planned. A Friday-afternoon search for a Saturday-morning coffee gives misleading commute estimates.
+  - *v2 fix:* Let users input their intended meetup time and pass the `departure_time` parameter to the Distance Matrix API — Google Maps supports time-aware routing natively.
+
+---
+
 ## What's Next
 
 - **Saved sessions** — share a link so both people can see the same suggestions
